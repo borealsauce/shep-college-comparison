@@ -1,0 +1,141 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><link rel="icon" href="data:,"><title>Shep College Comparison</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#050505;--line:#262626;--gold:#e8b923;--txt:#f5f5f5;--muted:#a3a3a3;--red:#ff5a63;--gb:#e8b92347}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(1200px 500px at 50% -200px,#e8b9231a,transparent),var(--bg);color:var(--txt);font:14px Inter,system-ui,sans-serif}
+h1,h2{font-family:Oswald,sans-serif;margin:0;color:var(--gold);text-transform:uppercase}h1{letter-spacing:.08em;font-size:26px}
+h2{font-size:18px;margin:28px 0 10px;letter-spacing:.1em;font-weight:600;border-left:3px solid var(--gold);padding-left:10px}
+.top{background:linear-gradient(180deg,#0c0c0c,#050505);border-bottom:1px solid var(--gb);padding:18px 0;position:relative}
+.top::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:linear-gradient(90deg,transparent,#e8b923,transparent)}
+.w{max-width:1500px;margin:0 auto;padding:0 16px}.muted{color:var(--muted)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-top:16px}
+.card,#gate form,.note{background:linear-gradient(180deg,#1c1c1c,#141414);border:1px solid var(--gb);border-radius:1rem;padding:14px}
+.card .l{font:600 11px Inter;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}.card .v{font:700 26px Oswald;color:var(--gold);margin:4px 0}.card .s{font-size:12px;color:var(--muted)}
+.tw{overflow:auto;max-height:80vh;border-radius:1rem;border:1px solid var(--gb)}
+table{width:100%;border-collapse:collapse;background:#141414;color:var(--txt)}
+th,td{padding:9px 10px;text-align:left;vertical-align:top}
+th{background:#0c0c0c;color:var(--gold);text-transform:uppercase;font:600 11px Inter;letter-spacing:.1em;border-bottom:1px solid var(--gold);position:sticky;top:0;z-index:2;white-space:nowrap}
+td{border-bottom:1px solid #202020;font-size:13px;min-width:110px}td.sc{font-weight:700;color:#fff;min-width:170px;position:sticky;left:0;background:#111;z-index:1}
+tr:nth-child(even) td{background:#0c0c0c66}tr:hover td{background:#e8b92314}
+td.wide{min-width:260px}.tag{display:inline-block;padding:2px 8px;border-radius:999px;font:700 11px Inter;white-space:nowrap;margin-bottom:4px}
+.g{background:#22c55e26;color:#4ade80;border:1px solid #22c55e66}.y{background:#facc1526;color:#fde047;border:1px solid #facc1566}.r{background:#ff2d3a22;color:#ff7b82;border:1px solid #ff2d3a55}
+.notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px}.note h3{margin:0 0 6px;font:600 14px Oswald;letter-spacing:.08em;color:var(--gold);text-transform:uppercase}.note p{margin:6px 0;line-height:1.5;color:#d4d4d4}
+.src td{white-space:pre-line;line-height:1.45}.src td:first-child{font-weight:700;color:var(--gold);min-width:150px}
+#gate{position:fixed;inset:0;background:var(--bg);display:grid;place-items:center;z-index:9}#gate form{text-align:center}
+#gate input{font:18px Inter;padding:8px 12px;border:1px solid var(--gb);border-radius:8px;width:180px;text-align:center;background:#0c0c0c;color:var(--txt)}
+#gate button{margin-left:6px;font:700 15px Inter;padding:9px 16px;border:0;border-radius:999px;background:var(--gold);color:#050505;cursor:pointer}
+.neg{color:var(--red)}footer{margin:30px 0;color:var(--muted);font-size:12px}
+@media(max-width:640px){h1{font-size:20px}.card .v{font-size:22px}td.sc{min-width:120px}}
+</style></head><body>
+<div id="gate"><form onsubmit="go(event)"><h1>Shep College Comparison</h1><p class="muted">Enter password</p><input id="pw" type="password" autofocus><button>Open</button><div id="err" class="neg"></div></form></div>
+<div class="top"><div class="w"><h1 id="ttl">Shep's College Comparison</h1><div class="muted" id="sub" style="margin-top:6px"></div></div></div>
+<div class="w" id="app" style="display:none">
+<div class="cards" id="cards"></div>
+<h2>College Comparison</h2><div class="muted" style="margin-bottom:8px">Merit: <span class="tag g">Likely</span> <span class="tag y">Possible</span> <span class="tag r">Unlikely / $0</span> · Tap any header to sort</div>
+<div class="tw"><table id="t"></table></div>
+<h2>How to read</h2><div class="notes" id="notes"></div>
+<h2>Sources</h2><div class="muted" id="intro" style="margin-bottom:8px"></div>
+<div class="tw"><table class="src" id="src"></table></div>
+<footer>Built from Shep College Comparison.xlsx</footer></div>
+<script>
+const b64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+async function decrypt(pw){const e=await (await fetch('data.enc.json',{cache:'no-store'})).json();
+const km=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveKey']);
+const key=await crypto.subtle.deriveKey({name:'PBKDF2',salt:b64(e.salt),iterations:e.iter,hash:'SHA-256'},km,{name:'AES-GCM',length:256},false,['decrypt']);
+return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:b64(e.iv)},key,b64(e.ct))));}
+async function go(ev){ev&&ev.preventDefault();const pw=document.getElementById('pw').value;try{const d=await decrypt(pw);sessionStorage.setItem('scpw',pw);document.getElementById('gate').remove();render(d)}catch(x){console.error(x);document.getElementById('err').textContent='Wrong password'}}
+if(sessionStorage.getItem('scpw')){document.getElementById('pw').value=sessionStorage.getItem('scpw');go()}
+const esc=s=>String(s??'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const num=s=>{const m=String(s).replace(/,/g,'').match(/\d+(\.\d+)?/);return m?+m[0]:''};
+const oos=s=>{const m=String(s).replace(/,/g,'').match(/\$(\d+)[^$]*$/);return m?+m[1]:''};
+const pct=v=>typeof v==='number'?{t:(Math.round(v*1000)/10)+'%',v:v*100}:{t:v,v:num(v)};
+const ML={g:'Likely',y:'Possible',r:'Unlikely'},MR={g:1,y:2,r:3};
+function render(d){document.getElementById('ttl').textContent=d.title.replace(/\s+—\s+/,' — ');document.getElementById('sub').textContent=d.sub;
+document.getElementById('app').style.display='';
+const R=d.rows;
+const byAcc=[...R].sort((a,b)=>b[2]-a[2]);const pub=R.filter(r=>!/private/i.test(r[5]));const cheap=[...pub].sort((a,b)=>oos(a[5])-oos(b[5]))[0];
+const top=R.filter(r=>/^#\d/.test(r[7])).sort((a,b)=>num(a[7])-num(b[7]));
+const g=R.filter(r=>r[13]=='g'),big=[...R].sort((a,b)=>b[1]-a[1])[0];
+const opt=R.filter(r=>/optional/i.test(r[12])).length;
+const C=(l,v,s)=>`<div class="card"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${esc(s)}</div></div>`;
+document.getElementById('cards').innerHTML=[C('Schools',R.length,`${opt} test-optional · ${R.length-opt} test-required`),
+C('Likely merit',g.length,g.map(r=>r[0].replace(/University of |\s*\(.*\)/g,'')).join(', ')),
+C('Easiest admit',(Math.round(byAcc[0][2]*1000)/10)+'%',byAcc[0][0]+' acceptance'),
+C('Lowest OOS tuition','$'+oos(cheap[5]).toLocaleString(),cheap[0]+' (public, out-of-state)'),
+C('Top AP rank',top[0][7].split(' ')[0],top[0][0]+` · ${top.length} of ${R.length} ranked`),
+C('Largest',big[1].toLocaleString(),big[0]+' undergrads')].join('');
+let t='<thead><tr>'+d.hdr.map(x=>`<th>${esc(x)}</th>`).join('')+'</tr></thead><tbody>';
+for(const r of R){const a=pct(r[2]),gk=pct(r[8]);const ap=/^#/.test(r[7])?num(r[7]):99;
+t+=`<tr><td class="sc">${esc(r[0])}</td><td data-v="${r[1]}">${r[1].toLocaleString()}</td><td data-v="${a.v}">${a.t}</td><td data-v="${num(r[3])}">${esc(r[3])}</td><td data-v="${num(r[4])}">${esc(r[4])}</td><td data-v="${oos(r[5])}" class="wide">${esc(r[5])}</td><td data-v="${MR[r[13]]||4}" class="wide"><span class="tag ${r[13]}">${ML[r[13]]||''}</span><br>${esc(r[6])}</td><td data-v="${ap}">${esc(r[7])}</td><td data-v="${gk.v}">${gk.t}</td><td class="wide">${esc(r[9])}</td><td class="wide">${esc(r[10])}</td><td class="wide">${esc(r[11])}</td><td>${esc(r[12])}</td></tr>`}
+document.getElementById('t').innerHTML=t+'</tbody>';
+document.getElementById('notes').innerHTML=d.notes.map(n=>`<div class="note"><h3>${esc(n.h.replace(/^How to read /,''))}</h3>${n.p.map(p=>`<p>${esc(p)}</p>`).join('')}</div>`).join('');
+document.getElementById('intro').textContent=d.intro;
+document.getElementById('src').innerHTML='<thead><tr><th>Field</th><th>Source & detail</th></tr></thead><tbody>'+d.src.map(s=>`<tr><td>${esc(s[0])}</td><td>${esc(s[1])}</td></tr>`).join('')+'</tbody>';}
+</script><!--SORTABLE-START--><script>
+/* Shared sortable tables (Grok Bot trackers). Click any header: asc/desc toggle with ▲/▼.
+   Works on dynamically rendered tables via event delegation. Totals (tfoot, .total/.ft/.tot rows,
+   or first cell TOTAL/ALL-TIME/GRAND) stay pinned at bottom. Group-label rows (fewer cells / colspan)
+   keep their members: sorting happens within each group. Uses td[data-v] when present.
+   Skip: th with own onclick, th.nosort, or table[data-nosort]. */
+(function(){
+  if(window.__sortableShared)return;window.__sortableShared=1;
+  var st=document.createElement('style');
+  st.textContent='table:not([data-nosort]) th:not(.nosort){cursor:pointer;user-select:none}th .srt-ar{font-size:.8em;opacity:.85;margin-left:3px}';
+  (document.head||document.documentElement).appendChild(st);
+  var MON={jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
+  function key(cell){
+    if(!cell)return null;
+    var raw=cell.dataset&&cell.dataset.v!=null?cell.dataset.v:cell.textContent;
+    var s=String(raw).replace(/[▲▼]/g,'').trim();
+    if(!s||s==='—'||s==='-'||s==='–'||/^n\/?a$/i.test(s))return null;
+    var m;
+    if((m=s.match(/^(\d{4})-(\d{2})(?:-(\d{2}))?/)))return {n:Date.UTC(+m[1],+m[2]-1,+(m[3]||1))};
+    if((m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/))){var y=+m[3];if(y<100)y+=2000;return {n:Date.UTC(y,+m[1]-1,+m[2])};}
+    if((m=s.match(/^([A-Za-z]{3})[a-z]*\.? (\d{1,2}),? (\d{4})$/))&&MON[m[1].toLowerCase()])return {n:Date.UTC(+m[3],MON[m[1].toLowerCase()]-1,+m[2])};
+    if((m=s.match(/^([A-Za-z]{3})[a-z]* (\d{4})$/))&&MON[m[1].toLowerCase()])return {n:Date.UTC(+m[2],MON[m[1].toLowerCase()]-1,1)};
+    if((m=s.match(/^Q([1-4]) (\d{4})$/i)))return {n:Date.UTC(+m[2],(+m[1]-1)*3,1)};
+    var t=s.replace(/[$,%x×\s]|USD/gi,'').replace(/^\+/,'').replace(/[−–]/g,'-');
+    var neg=/^\(.*\)$/.test(t);if(neg)t=t.slice(1,-1);
+    var mult=1;if((m=t.match(/^(-?[\d.]+)([KMB])$/i))){t=m[1];mult={k:1e3,m:1e6,b:1e9}[m[2].toLowerCase()];}
+    if(/^-?\d*\.?\d+$/.test(t))return {n:parseFloat(t)*mult*(neg?-1:1)};
+    return {s:s.toLowerCase()};
+  }
+  function pinned(r){
+    if(r.parentElement&&r.parentElement.tagName==='TFOOT')return true;
+    if(/(^|\s)(total|totals|ft|tot|sum|grand|pinned)(\s|$)/i.test(r.className))return true;
+    var c=r.cells[0];return !!c&&/^\s*(TOTAL|TOTALS|ALL-TIME|GRAND TOTAL)\b/i.test(c.textContent);
+  }
+  document.addEventListener('click',function(e){
+    var th=e.target.closest&&e.target.closest('th');if(!th||th.onclick||th.classList.contains('nosort'))return;
+    var tb=th.closest('table');if(!tb||tb.hasAttribute('data-nosort'))return;
+    var hr=th.parentElement;if(hr.parentElement.tagName==='TFOOT')return;
+    var ci=0;for(var k=0;k<hr.cells.length&&hr.cells[k]!==th;k++)ci+=hr.cells[k].colSpan||1;
+    var ncol=0;for(k=0;k<hr.cells.length;k++)ncol+=hr.cells[k].colSpan||1;
+    var dir=th.dataset.sdir==='asc'?'desc':'asc',m=dir==='asc'?1:-1;
+    tb.querySelectorAll('th').forEach(function(x){delete x.dataset.sdir;var a=x.querySelector('.srt-ar');if(a)a.remove();});
+    th.dataset.sdir=dir;var ar=document.createElement('span');ar.className='srt-ar';ar.textContent=dir==='asc'?'▲':'▼';th.appendChild(ar);
+    var bodies=tb.tBodies.length?[].slice.call(tb.tBodies):[tb];
+    bodies.forEach(function(body){
+      var all=[].slice.call(body.rows).filter(function(r){return r!==hr&&!(r.cells.length&&r.cells[0].tagName==='TH'&&!r.querySelector('td'));});
+      var pins=[],groups=[{head:null,rows:[]}];
+      all.forEach(function(r){
+        if(pinned(r)){pins.push(r);return;}
+        var w=0;for(var j=0;j<r.cells.length;j++)w+=r.cells[j].colSpan||1;
+        if(r.cells.length===1&&ncol>1)groups.push({head:r,rows:[]});else groups[groups.length-1].rows.push(r);
+      });
+      function cellAt(r){var x=0;for(var j=0;j<r.cells.length;j++){if(x===ci)return r.cells[j];x+=r.cells[j].colSpan||1;}return null;}
+      groups.forEach(function(g){
+        g.rows.sort(function(a,b){var A=key(cellAt(a)),B=key(cellAt(b));
+          if(!A&&!B)return 0;if(!A)return 1;if(!B)return -1;
+          if(A.n!=null&&B.n!=null)return (A.n-B.n)*m;
+          return String(A.s!=null?A.s:A.n).localeCompare(String(B.s!=null?B.s:B.n),undefined,{numeric:true})*m;});
+        if(g.head)body.appendChild(g.head);g.rows.forEach(function(r){body.appendChild(r);});
+      });
+      pins.forEach(function(r){body.appendChild(r);});
+    });
+  },false);
+})();
+
+</script><!--SORTABLE-END-->
+</body></html>
