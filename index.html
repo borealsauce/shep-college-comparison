@@ -60,7 +60,7 @@ const g=R.filter(r=>r[13]=='g'),big=[...R].sort((a,b)=>b[1]-a[1])[0];
 const opt=R.filter(r=>/optional/i.test(r[12])).length;
 const C=(l,v,s)=>`<div class="card"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${esc(s)}</div></div>`;
 document.getElementById('cards').innerHTML=[C('Schools',R.length,`${opt} test-optional · ${R.length-opt} test-required`),
-C('Likely merit',g.length,g.map(r=>r[0].replace(/University of |\s*\(.*\)/g,'')).join(', ')),
+C('Likely merit',g.length,g.map(r=>(r[0].match(/\((.*)\)/)||[])[1]||r[0].replace(/ University$|University of /g,'')).join(', ')),
 C('Easiest admit',(Math.round(byAcc[0][2]*1000)/10)+'%',byAcc[0][0]+' acceptance'),
 C('Lowest OOS tuition','$'+oos(cheap[5]).toLocaleString(),cheap[0]+' (public, out-of-state)'),
 C('Top AP rank',top[0][7].split(' ')[0],top[0][0]+` · ${top.length} of ${R.length} ranked`),
