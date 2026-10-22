@@ -28,7 +28,6 @@ td.wide{min-width:260px}.tag{display:inline-block;padding:2px 8px;border-radius:
 .neg{color:var(--red)}footer{margin:30px 0;color:var(--muted);font-size:12px}
 @media(max-width:640px){h1{font-size:20px}.card .v{font-size:22px}td.sc{min-width:120px}}
 </style></head><body>
-<div id="gate"><form onsubmit="go(event)"><h1>Shep College Comparison</h1><p class="muted">Enter password</p><input id="pw" type="password" autofocus><button>Open</button><div id="err" class="neg"></div></form></div>
 <div class="top"><div class="w"><h1 id="ttl">Shep's College Comparison</h1><div class="muted" id="sub" style="margin-top:6px"></div></div></div>
 <div class="w" id="app" style="display:none">
 <div class="cards" id="cards"></div>
@@ -39,13 +38,7 @@ td.wide{min-width:260px}.tag{display:inline-block;padding:2px 8px;border-radius:
 <div class="tw"><table class="src" id="src"></table></div>
 <footer>Built from Shep College Comparison.xlsx</footer></div>
 <script>
-const b64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
-async function decrypt(pw){const e=await (await fetch('data.enc.json',{cache:'no-store'})).json();
-const km=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveKey']);
-const key=await crypto.subtle.deriveKey({name:'PBKDF2',salt:b64(e.salt),iterations:e.iter,hash:'SHA-256'},km,{name:'AES-GCM',length:256},false,['decrypt']);
-return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:b64(e.iv)},key,b64(e.ct))));}
-async function go(ev){ev&&ev.preventDefault();const pw=document.getElementById('pw').value;try{const d=await decrypt(pw);sessionStorage.setItem('scpw',pw);document.getElementById('gate').remove();render(d)}catch(x){console.error(x);document.getElementById('err').textContent='Wrong password'}}
-if(sessionStorage.getItem('scpw')){document.getElementById('pw').value=sessionStorage.getItem('scpw');go()}
+fetch('data.json',{cache:'no-store'}).then(r=>r.json()).then(render);
 const esc=s=>String(s??'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 const num=s=>{const m=String(s).replace(/,/g,'').match(/\d+(\.\d+)?/);return m?+m[0]:''};
 const oos=s=>{const m=String(s).replace(/,/g,'').match(/\$(\d+)[^$]*$/);return m?+m[1]:''};
